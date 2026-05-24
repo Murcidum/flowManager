@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: flow-manager
+      changes:
+        - createTable:
+            tableName: conversion_tasks
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: original_file_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: source_bucket
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: source_key
+                  type: varchar(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: result_bucket
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: result_key
+                  type: varchar(500)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: error_message
+                  type: text
+                  constraints:
+                    nullable: true
+              - column:
+                  name: created_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: conversion_tasks
+            indexName: idx_conversion_tasks_status
+            columns:
+              - column:
+                  name: status

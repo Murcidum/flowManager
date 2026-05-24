@@ -1,0 +1,15 @@
+services:
+  postgres-flow-manager:
+    image: postgres:16
+    container_name: postgres-flow-manager
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: flow_manager
+      POSTGRES_USER: flow_manager
+      POSTGRES_PASSWORD: flow_manager
+    volumes:
+      - postgres-flow-manager-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-flow-manager-data:
