@@ -19,4 +19,17 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleIllegalState(IllegalStateException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
+
+    @ExceptionHandler(FileReadException.class)
+    public ProblemDetail handleFileRead(FileReadException ex) {
+        log.error("File read error", ex);
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+    }
+
+    @ExceptionHandler(MinioStorageException.class)
+    public ProblemDetail handleMinioStorage(MinioStorageException ex) {
+        log.error("MinIO storage error", ex);
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
 }

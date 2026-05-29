@@ -55,6 +55,10 @@ kafka:
     conversion-request: conversion-request
     conversion-result: conversion-result
 
+outbox:
+  relay:
+    fixed-delay-ms: 5000
+
 eureka:
   client:
     service-url:

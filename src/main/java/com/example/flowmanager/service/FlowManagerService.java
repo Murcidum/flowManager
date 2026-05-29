@@ -6,9 +6,14 @@ import com.example.flowmanager.dto.ConversionStatusResponse;
 import com.example.flowmanager.dto.UploadResponse;
 import com.example.flowmanager.entity.ConversionStatus;
 import com.example.flowmanager.entity.ConversionTask;
+import com.example.flowmanager.entity.OutboxEvent;
+import com.example.flowmanager.exception.FileReadException;
 import com.example.flowmanager.exception.TaskNotFoundException;
-import com.example.flowmanager.kafka.ConversionRequestProducer;
+import com.example.flowmanager.factory.ConversionTaskFactory;
 import com.example.flowmanager.repository.ConversionTaskRepository;
+import com.example.flowmanager.repository.OutboxEventRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,9 +30,12 @@ import java.util.UUID;
 public class FlowManagerService {
 
     private final ConversionTaskRepository conversionTaskRepository;
+    private final OutboxEventRepository outboxEventRepository;
     private final MinioStorageService minioStorageService;
-    private final ConversionRequestProducer conversionRequestProducer;
+    private final ConversionTaskFactory conversionTaskFactory;
+    private final ObjectMapper objectMapper;
 
+    @Transactional
     public UploadResponse upload(MultipartFile file) {
         String originalFileName = file.getOriginalFilename();
         String objectKey = UUID.randomUUID() + "_" + originalFileName;
@@ -36,30 +44,28 @@ public class FlowManagerService {
         try {
             bytes = file.getBytes();
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read uploaded file", e);
+            throw new FileReadException("Failed to read uploaded file", e);
         }
 
         String bucket = minioStorageService.uploadFile(objectKey, bytes, file.getContentType());
 
-        ConversionTask task = ConversionTask.processing(originalFileName, bucket, objectKey);
+        ConversionTask task = conversionTaskFactory.createPending(originalFileName, bucket, objectKey);
         conversionTaskRepository.save(task);
-        log.info("Task created: id={}, key={}", task.getId(), objectKey);
 
-        ConversionRequestEvent event = new ConversionRequestEvent(
-                task.getId().toString(),
-                bucket,
-                objectKey
-        );
-
+        OutboxEvent outboxEvent = new OutboxEvent();
+        outboxEvent.setAggregateId(task.getId());
+        outboxEvent.setEventType("CONVERSION_REQUEST");
+        outboxEvent.setCreatedAt(LocalDateTime.now());
         try {
-            conversionRequestProducer.sendRequest(event);
-        } catch (Exception e) {
-            log.error("Failed to send Kafka event for task {}: {}", task.getId(), e.getMessage());
-            task.setStatus(ConversionStatus.ERROR);
-            task.setErrorMessage("Failed to queue conversion: " + e.getMessage());
-            task.setUpdatedAt(LocalDateTime.now());
-            conversionTaskRepository.save(task);
+            outboxEvent.setPayload(objectMapper.writeValueAsString(
+                    new ConversionRequestEvent(task.getId().toString(), bucket, objectKey)
+            ));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize outbox event payload", e);
         }
+        outboxEventRepository.save(outboxEvent);
+
+        log.info("Task created: id={}, key={}", task.getId(), objectKey);
 
         return new UploadResponse(task.getId(), task.getStatus());
     }

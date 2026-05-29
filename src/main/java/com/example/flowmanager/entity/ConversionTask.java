@@ -47,14 +47,4 @@ public class ConversionTask {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public static ConversionTask processing(String originalFileName, String sourceBucket, String sourceKey) {
-        ConversionTask task = new ConversionTask();
-        task.originalFileName = originalFileName;
-        task.sourceBucket = sourceBucket;
-        task.sourceKey = sourceKey;
-        task.status = ConversionStatus.PROCESSING;
-        task.createdAt = LocalDateTime.now();
-        task.updatedAt = LocalDateTime.now();
-        return task;
-    }
 }

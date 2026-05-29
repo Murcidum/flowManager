@@ -1,6 +1,7 @@
 package com.example.flowmanager.kafka;
 
 import com.example.flowmanager.dto.ConversionRequestEvent;
+import com.example.flowmanager.exception.KafkaPublishException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +26,7 @@ public class ConversionRequestProducer {
         try {
             kafkaTemplate.send(requestTopic, event.eventId(), event).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to send conversion request to Kafka: " + event.eventId(), e);
+            throw new KafkaPublishException("Failed to send conversion request to Kafka: " + event.eventId(), e);
         }
     }
 }

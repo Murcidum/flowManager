@@ -1,6 +1,7 @@
 package com.example.flowmanager.service;
 
 import com.example.flowmanager.config.MinioProperties;
+import com.example.flowmanager.exception.MinioStorageException;
 import io.minio.*;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class MinioStorageService {
                 log.info("Created MinIO bucket: {}", bucket);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to ensure MinIO bucket exists: " + bucket, e);
+            throw new MinioStorageException("Failed to ensure MinIO bucket exists: " + bucket, e);
         }
     }
 
@@ -47,7 +48,7 @@ public class MinioStorageService {
                             .contentType(contentType)
                             .build());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to upload file to MinIO: " + objectKey, e);
+            throw new MinioStorageException("Failed to upload file to MinIO: " + objectKey, e);
         }
         return bucket;
     }
@@ -61,7 +62,7 @@ public class MinioStorageService {
                         .build())) {
             return stream.readAllBytes();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download file from MinIO: " + objectKey, e);
+            throw new MinioStorageException("Failed to download file from MinIO: " + objectKey, e);
         }
     }
 }
