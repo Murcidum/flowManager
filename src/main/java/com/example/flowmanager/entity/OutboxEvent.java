@@ -22,8 +22,9 @@ public class OutboxEvent {
     @Column(name = "aggregate_id", nullable = false)
     private UUID aggregateId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false)
-    private String eventType;
+    private OutboxEventType eventType;
 
     @Column(nullable = false, columnDefinition = "text")
     private String payload;

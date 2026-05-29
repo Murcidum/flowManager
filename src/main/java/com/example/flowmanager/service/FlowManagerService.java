@@ -7,7 +7,9 @@ import com.example.flowmanager.dto.UploadResponse;
 import com.example.flowmanager.entity.ConversionStatus;
 import com.example.flowmanager.entity.ConversionTask;
 import com.example.flowmanager.entity.OutboxEvent;
+import com.example.flowmanager.entity.OutboxEventType;
 import com.example.flowmanager.exception.FileReadException;
+import com.example.flowmanager.exception.OutboxSerializationException;
 import com.example.flowmanager.exception.TaskNotFoundException;
 import com.example.flowmanager.factory.ConversionTaskFactory;
 import com.example.flowmanager.repository.ConversionTaskRepository;
@@ -54,14 +56,14 @@ public class FlowManagerService {
 
         OutboxEvent outboxEvent = new OutboxEvent();
         outboxEvent.setAggregateId(task.getId());
-        outboxEvent.setEventType("CONVERSION_REQUEST");
+        outboxEvent.setEventType(OutboxEventType.CONVERSION_REQUEST);
         outboxEvent.setCreatedAt(LocalDateTime.now());
         try {
             outboxEvent.setPayload(objectMapper.writeValueAsString(
                     new ConversionRequestEvent(task.getId().toString(), bucket, objectKey)
             ));
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize outbox event payload", e);
+            throw new OutboxSerializationException("Failed to serialize outbox event payload", e);
         }
         outboxEventRepository.save(outboxEvent);
 

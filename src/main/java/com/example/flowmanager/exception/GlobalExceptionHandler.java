@@ -32,4 +32,10 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 
+    @ExceptionHandler(OutboxSerializationException.class)
+    public ProblemDetail handleOutboxSerialization(OutboxSerializationException ex) {
+        log.error("Outbox serialization error", ex);
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
 }
